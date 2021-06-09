@@ -1,6 +1,6 @@
 # Ember.js
 
-An angular-flavored single page app framework
+An angular-flavored single page app framework. What better way to start learning than to write oneself a textbook.
 
 ## Prerequisites
 
@@ -19,6 +19,11 @@ Optional:
 ## CLI
 
 `ember g c <name of component>` include `-gc` to generate a js file for the component.
+`ember g r <name of route>`
+
+## Working With Ember
+
+Step-by-step via the `Super Rentals` tutorial
 
 ### Getting Started from the Command Line
 
@@ -26,4 +31,6 @@ Optional:
 - `cd <name of app>`
 - `ember serve`
 
-##
+Stop the server with `ctrl + c`
+
+### Working with HTML, CSS and Assets

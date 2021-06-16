@@ -243,11 +243,64 @@ An example of a modifier in action is...
 ```
 Note that the function call begins with this. Anytime the contents of a template begin with this, it is a clear signal that it is referring to something that is defined with the Javascript file rendered for the component.
 
+### Decorators and Action Decorator
+
+Decorators are read bottom to top when stacked.
+
+Decorators are recognized as class-build time and establish a relationship between the object and propName. `@action` binds a method to a component instance. This reduces Javascripts `this` weirdness. Java feels. Spring Boot feels. All is right in the world. `this` will always be the component when using `@action`
+
+
+### Integration Testing
+Integration tests determine if the contents of the html match expectations.
+Here is a handy template for writing integration tests...   
+```
+assert.deepEqual(
+      this.element.textContent
+        .trim()
+        .replace(/\s*\n+\s*/g, '\n')
+        .split('\n'),
+        [
+          "Login",
+          "Select a user",
+          "Testy Testerson",
+          "Sample McData",
+          "A validation message"
+        ]
+    );
+```
+`deepEqual` is used to make a more thorough check; it reads contents. `equal` checks to the same extent as `===`.   
+`trim` will remove white space that could lead to false failures.
+`.replace(/\s*\n+\s*/g, '\n')` <-- this bit of regex will remove tabs and extra lines and turn them into a singular new line. With this bit implemented an edit later that adds a bunch of new lines or tabs to the content will not break a valid test.
+`split('\n')` <-- takes the content that was just seperated into new lines and creates an array split upon those lines. It is against this array that the test will run.
+Finally, The expected array in entered as the second argument in the assertion.
+
+### Stateful Components
+
+Adding state to a component requires edits to both the `.hbs` template and `.js` object. In the object it will be as simple as...
+
+```
+userId = null;
+```
+
+In the `.hbs` file...  
+```
+<select
+            class="block appearance-none w-full bg-white border border-grey-light hover:border-grey px-4 py-2 pr-8 rounded shadow leading-tight focus:outline-none focus:shadow-outline">
+            <option selected={{ not this.userId }} value="">Select a user</option>
+            <option selected={{ eq this.userId "1" }} value="1">Testy Testerson</option>
+            <option selected={{ eq this.userId "2" }} value="2">Sample McData</option>
+          </select>
+```
+The `userId` is initialized to `null`. That is changed by the user via the `.hbs`. `selected` is a standard HTML jobby.
+{{not}} is ember stuff that is equivalent to `!this.userID` in JS. `value=""` is the expected value from the given line of HTML.
+{{eq}} means equal. Again there are no JS `this` shenanigans becuase the `@action` decorator tethers a given object and method at build time. Also note again that a space is used to delimit between eq, the method call and the argument.
+
+### Using Track Properties
+
+Ember Octane does not rely on two-way binding. This is done for the sake of creating more performant apps.
 
 
 
 
-define integration, acceptance and unit. Hydration and rehydration.
-
-
-
+Listen for a dom event
+When that dom event is fired we use vanilla javascript give some property a new value.

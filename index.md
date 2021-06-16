@@ -339,4 +339,34 @@ The `if` helper can also be used inline...
             disabled={{this.isDisabled}}
             value="Sign In" type="submit" />
 ```
+In the lines above there is an inline `if` that will change the color of the button depending on the state of `userId`. Below that is another conditional that disables the button based upon the state of `userId`.
 
+The inline if closely ressembles a ternary operator.
+
+### Integration Tests pt. 2
+
+A more meaningful integration test looks like this...  
+```
+assert.deepEqual(
+      this.element.textContent
+        .trim()
+        .replace(/\s*\n+\s*/g, '\n')
+        .split('\n'),
+        [
+          "Login",
+          "Select a user",
+          "Testy Testerson",
+          "Sample McData"
+        ]
+    );
+    let button = /** @type {HTMLInputElement} */ (find('input[type="submit"]'));
+    assert.equal(button.disabled, true);
+    // button is disabled
+    await fillIn('select', '1');
+    assert.equal(button.disabled, false);
+    // button is enabled
+  });
+});
+```
+Now that the login page of the app changes based upon the state of `userId`, those condiditons can be tested.
+Above is test that checks if a button is actually activated or deactivated given the state of a property. As with the previous integration test note that the button is identified by some unique piece of HTML. In this case, it is stored in a variable - DRY.

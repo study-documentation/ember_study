@@ -272,16 +272,14 @@ assert.deepEqual(
 `trim` will remove white space that could lead to false failures.
 `.replace(/\s*\n+\s*/g, '\n')` <-- this bit of regex will remove tabs and extra lines and turn them into a singular new line. With this bit implemented an edit later that adds a bunch of new lines or tabs to the content will not break a valid test.
 `split('\n')` <-- takes the content that was just seperated into new lines and creates an array split upon those lines. It is against this array that the test will run.
+Integration tests do not include dynamic elements such as `{{this.userId}}`.
 Finally, The expected array in entered as the second argument in the assertion.
 
 ### Stateful Components
 
 Adding state to a component requires edits to both the `.hbs` template and `.js` object. In the object it will be as simple as...
-
-```
-userId = null;
-```
-
+`userId = null;`<br>
+<br>
 In the `.hbs` file...  
 ```
 <select
@@ -299,8 +297,46 @@ The `userId` is initialized to `null`. That is changed by the user via the `.hbs
 
 Ember Octane does not rely on two-way binding. This is done for the sake of creating more performant apps.
 
+Ember Octane's reliance on one-way binding means one must opt-in to tracking infomation. This is done via the `@tracked` annotation. This is imported from `import { tracked } from '@glimmer/tracking';`. This only applies to properties of templates.
 
+Seen in a code snippet...   
+```
+export default class LoginFormComponent extends Component {
+  @tracked
+  userId = null;
+```
+Everything else is the same as the code in the last section.
 
+- Listen for a dom event
+- When that dom event is fired we use vanilla javascript give some property a new value.
 
-Listen for a dom event
-When that dom event is fired we use vanilla javascript give some property a new value.
+#### Enabling and Disabling 
+
+Observing null state can be done with vanilla JS getters.
+```
+get isDisabled(){
+    return !this.userId;
+  }
+```
+This returns true is userId is false.
+This does not need to be tracked.
+
+### `if` Helper
+
+Up to this point the validation message below the user selection drop down was visible even when a user was not selected. Thats dumb. It should be displayed given a condition. This is done via the `if` helper.
+```
+<p class="text-blue text-xs italic my-4">
+          {{#if (not this.isDisabled)}}
+            Logging in with User ID: {{this.userId}}
+          {{/if}}
+        </p>
+```  
+With these lines of code the user id confirmation line will only appear if `userId` is not `null`.
+
+The `if` helper can also be used inline...
+```
+<input class="{{if this.isDisabled "bg-grey" "bg-teal"}} text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            disabled={{this.isDisabled}}
+            value="Sign In" type="submit" />
+```
+

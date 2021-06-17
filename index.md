@@ -370,3 +370,11 @@ assert.deepEqual(
 ```
 Now that the login page of the app changes based upon the state of `userId`, those condiditons can be tested.
 Above is test that checks if a button is actually activated or deactivated given the state of a property. As with the previous integration test note that the button is identified by some unique piece of HTML. In this case, it is stored in a variable - DRY.
+
+## Services
+
+Services allow information to be passed horizontally via a central definition of a given component or object. Singletons, bro.
+`ember g service <name of service>` <br>
+As usual this creates two files, the class and a passing test.
+
+These services act much the same as angular services. The service `auth` is nearly identical to the auth I wrote for ripl. local storage is used to pass userId info around the app. That userId is leveraged to load user info relevant to a certain dom elements. 

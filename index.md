@@ -377,4 +377,38 @@ Services allow information to be passed horizontally via a central definition of
 `ember g service <name of service>` <br>
 As usual this creates two files, the class and a passing test.
 
-These services act much the same as angular services. The service `auth` is nearly identical to the auth I wrote for ripl. local storage is used to pass userId info around the app. That userId is leveraged to load user info relevant to a certain dom elements. 
+A service looks like this...   
+```
+import Service from '@ember/service';
+import { inject as service } from '@ember/service';
+import Router from '@ember/routing/router';
+
+const AUTH_KEY = 'shlack-userid';
+
+export default class AuthService extends Service {
+  /**
+   *  @type {Router}
+   */
+  @service router;
+
+  get currentUserId(){
+    return window.localStorage.getItem(AUTH_KEY);
+  }
+
+  loginWithUserId(userId) {
+    window.localStorage.setItem(AUTH_KEY, userId);
+    this.router.transitionTo('teams');
+  }
+}
+```
+There are a few things happening here...  
+- it uses another service called Router which handles internal routing
+- it holds user ID via Local Storage and handles all things user
+  - The fact that it is using local storage is abstracted away. No other feature will access it directly.
+
+Ember services are written almost identically to Angular services.
+
+(NOTE: local storage is found in chrome dev tools > application > storage > local storage)
+
+
+

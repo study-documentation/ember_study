@@ -556,7 +556,41 @@ Now the `auth` service is wired into the `team-sidebar` component. Since the log
       Logout
     </button>
 ```
-### Integration Tests for Logout
+
+Now, by means on the `{{on}}` modifier, when a user clicks on the logout button, the localStorage item which holds the userId is set to `null`. When the userId is null, the page is automatically rerouted to the `/login` endpoint. This is a very important point! Clicking logout does not reroute to the login page. Clicking logout begins a chain of events that results in being rerouted to the login page. It is the current state that will cause the reroute. 
+### Tests for Logout
+
+Again, as an app evolves tests start to fail. The acceptance test for the logouit feature needs to be updated to make the routing changes made in the previous step.
+
+Two steps are needed.
+1) Alter the mock service to match the updated auth service by adding a logOut function<br>
+```
+ @action
+  logOut() {
+    this.currentUserId = null;
+    this.router.transitionTo('login');
+  }
+```
+
+2) Lookup that mock service and use it in the test
+```
+test('visiting teams and clicking logout', async function(assert) {
+    this.owner.lookup('service:auth').currentUserId = '1';
+    await visit('/teams'); //goto the /teams URl
+
+    assert.equal(currentURL(), '/teams');
+
+    await click('.team-sidebar__logout-button');
+
+    assert.equal(currentURL(), '/login');
+  });
+});
+```
+
+## Nested Routes and Async Data
+
+### Outlets, URLs and Routes
+
 
 
 

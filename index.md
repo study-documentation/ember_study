@@ -410,5 +410,158 @@ Ember services are written almost identically to Angular services.
 
 (NOTE: local storage is found in chrome dev tools > application > storage > local storage)
 
+### Testing with Services (Creating Mock Services)
+
+Once services are in place integration testing can interfere with the state of the app. The following steps must be taken...  
+- create a mock service
+- wire it up in the test
+
+In the tests direectory create a subdirectory called `stubs`. Here create a file called `auth-sercive.js`. The naming convetion is `<name of service to be mocked>-service.js`.
+In this file create a service that behaves the same as the original but does not interact with local storage. That will look something like this...  
+```
+import Service from '@ember/service';
+import { inject as service } from '@ember/service';
+import Router from '@ember/routing/router';
+
+export default class MockAuthService extends Service {
+  currentUserId = null;
+
+  /**
+   *  @type {Router}
+   */
+  @service router;
+
+  loginWithUserId(userId) {
+    this.currentUserId = userId;
+    this.router.transitionTo('teams');
+  }
+}
+```
+Note that now we a just interacting with the properties of this particular class and that the file name is different than the class/export name.
+Next, the mock service must be wired into the test. The test will now look like this...
+```
+import { module, test } from 'qunit';
+import { visit, currentURL, click } from '@ember/test-helpers';
+import { setupApplicationTest } from 'ember-qunit';
+import MockAuthService from '../stubs/auth-service';
+
+module('Acceptance | logging out', function(hooks) {
+  setupApplicationTest(hooks);
+
+  hooks.beforeEach(function(){
+    this.owner.register('service:auth', MockAuthService)
+  })
+
+  test('visiting teams and clicking logout', async function(assert) {
+    await visit('/teams'); //goto the /teams URl
+
+    assert.equal(currentURL(), '/teams');
+
+    await click('.team-sidebar__logout-button');
+
+    assert.equal(currentURL(), '/login');
+  });
+});
+```
+Note that `MockAuthService is imported and that the before each hook is used, along with an anonymous function, to wire in the mock service. thats it. Badabing.
+
+### Guarded Routes
+
+i.e. `"you aren't logged in GTFO of here, bruh!"`
+This is done by modifying the `.js` files in the `app/routes` directory via a variety of hooks. Below are two routes that require authentication. Depending on state users will be directed to login or teams'
+
+Login Route
+```
+import Route from '@ember/routing/route';
+import { inject as service } from '@ember/service';
+import AuthService from 'shlack/services/auth';
+export default class LoginRoute extends Route {
+  /**
+   * @type {AuthService}
+   */
+
+   @service auth;
+
+   async beforeModel(transition){
+     await super.beforeModel(transition);
+     if(this.auth.currentUserId) {
+       this.transitionTo('teams');
+     }
+   }
+}
+```
+
+Teams Route
+```
+import Route from '@ember/routing/route';
+import { inject as service } from '@ember/service';
+import AuthService from 'shlack/services/auth';
+
+export default class TeamsRoute extends Route {
+  /**
+   * @type {AuthService}
+   */
+
+  @service auth;
+
+  async beforeModel(transition){
+    await super.beforeModel(transition);
+    if(!this.auth.currentUserId) {
+      this.transitionTo('login');
+    }
+  }
+}
+```
+Note that `super` is used in the beforeNodel() hook and that these are async/await functions. Transition is an object that is atomized piece of state. It allows a user to return to a previous point based on some changed state. This is all pretty straight forward Javascript. Note that these are hooks so the naming is nonnegotiable. `this.transitionTo()` is used again. Same as Angular just slightly different naming.
+
+### Auth State & `transitionTo`
+#### `transitionTo` vs. `replaceWith`
+tranisitionTo adds a new item to the users history
+replaceWith replaces the item in the users history.
+transitionTo can create those frustrating back button does nothing loops. The choice between these two functions comes down to what a developer wants the history stack to look like.
+
+#### Auth State
+Now there needs to be a logout button that resets userId state to `null`.
+
+There are few steps to doing this and each surrounds funneling the functionality of the `auth` service to the correct component.
+1) this code block is added to the `auth` service that was created in the previous step.<br>
+```
+@action
+  logOut() {
+    window.localStorage.removeItem(AUTH_KEY);
+    this.router.transitionTo('login')
+  }
+```
+Why make a service (or function within a service) an action? The action decorator can be placed on any file in the project, not just ember templates. This creates bound and trackable functions available through out the app.
+
+2) In the `team-sidebar.js`, the `auth` service must be wired in. That is done via a very simple file structure.
+```
+import Component from '@glimmer/component';
+import { inject as service } from '@ember/service';
+import AuthService from 'shlack/services/auth';
+
+export default class TeamSidebarComponent extends Component {
+  /**
+   * @type {AuthService}
+   */
+  @service auth;
+}
+```
+Now the `auth` service is wired into the `team-sidebar` component. Since the logout function is an action it called be piped through the component.
+
+3) Add an event handler to the `team-sidebar.hbs`
+```
+<button {{on "click" this.auth.logOut}}
+    class="text-white rounded bg-grey-dark hover:bg-red-darker p-2 team-sidebar__logout-button">
+      Logout
+    </button>
+```
+### Integration Tests for Logout
+
+
+
+
+
+
 
 
